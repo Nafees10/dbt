@@ -36,10 +36,10 @@ int main(void) {
 	setbuf(stdin, NULL), setbuf(stdout, NULL);
 	struct input_event ev;
 	while (fread(&ev, sizeof(struct input_event), 1, stdin) == 1) {
-		if (find(ev.code)) continue;
-		if (ev.value == UP)
+		if (ev.value == UP || !find((ev.code))){
 			push(ev.code);
-		fwrite(&ev, sizeof(struct input_event), 1, stdout);
+			fwrite(&ev, sizeof(struct input_event), 1, stdout);
+		}
 	}
 	fprintf(stderr, "stdin got EOF. Bye Bye\n");
 }
