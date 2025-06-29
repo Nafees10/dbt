@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <linux/input.h>
 #include <time.h>
@@ -12,20 +11,6 @@ static inline long long time_ms(){
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (ts.tv_sec * 1000LL) + (ts.tv_nsec / 1000000LL);
-}
-
-void event_write(const struct input_event *event) {
-	if (fwrite(event, sizeof(struct input_event), 1, stdout) != 1)
-		exit(EXIT_FAILURE);
-}
-
-int event_read(struct input_event *event) {
-	while (1){
-		const int ret = fread(event, sizeof(struct input_event), 1, stdin) == 1;
-		if (!ret)
-			return ret;
-		return ret;
-	}
 }
 
 long long qTime[HIST_SIZE] = {0};
@@ -50,14 +35,11 @@ int find(__u16 code){
 int main(void) {
 	setbuf(stdin, NULL), setbuf(stdout, NULL);
 	struct input_event ev;
-	while (event_read(&ev)) {
-		if (ev.value == UP){
-			event_write(&ev);
-			push(ev.code);
-			continue;
-		}
+	while (fread(&ev, sizeof(struct input_event), 1, stdin) == 1) {
 		if (find(ev.code)) continue;
-		event_write(&ev);
+		if (ev.value == UP)
+			push(ev.code);
+		fwrite(&ev, sizeof(struct input_event), 1, stdout);
 	}
 	fprintf(stderr, "stdin got EOF. Bye Bye\n");
 }
