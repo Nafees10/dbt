@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <linux/input.h>
 #include <time.h>
-#define DEB_TIME_MS 40
-#define DEB_TIME_ADD_MS 30
+#define DEB_TIME_MS 30
+#define DEB_TIME_ADD_MS 40
 #define HIST_SIZE 64
 #define UP 0
 #define DOWN 1
@@ -14,30 +14,29 @@ static inline long long time_ms(){
 	return (ts.tv_sec * 1000LL) + (ts.tv_nsec / 1000000LL);
 }
 
-long long qTime[HIST_SIZE] = {0};
-__u16 qCode[HIST_SIZE] = {0};
-int qIdx = 0;
-
-long long time_of_event(__u16 code){
+long long deb_time(__u16 code){
 	long long ms = time_ms();
 	switch (code){
 		case KEY_ENTER:
 		case KEY_DOT:
 		case KEY_COMMA:
-			return ms - DEB_TIME_ADD_MS;
-		default:
-			return ms;
+			ms += DEB_TIME_ADD_MS;
 	}
+	return ms + DEB_TIME_MS;
 }
 
+long long qTime[HIST_SIZE] = {0};
+__u16 qCode[HIST_SIZE] = {0};
+int qIdx = 0;
+
 void push(__u16 code){
-	qTime[qIdx] = time_of_event(code);
+	qTime[qIdx] = deb_time(code);
 	qCode[qIdx] = code;
 	qIdx = (qIdx + 1) % HIST_SIZE;
 }
 
 int find(__u16 code){
-	int thresh = time_ms() - DEB_TIME_MS;
+	int thresh = time_ms();
 	for (int i = 0; i < HIST_SIZE; i ++){
 		if (qTime[i] > thresh && qCode[i] == code)
 			return 1;
